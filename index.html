@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freshi Barida jaba baze</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        charcoal: '#1a1a2e',
+                        deepgreen: '#16213e',
+                        accent: '#0f3460',
+                        neon: '#e94560',
+                        steam: '#ff6b35',
+                        jaba: '#7b2ff7',
+                        leaf: '#00c853',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+        }
+        .brand-font {
+            font-family: 'Permanent Marker', cursive;
+        }
+        .product-btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .product-btn:active {
+            transform: scale(0.95);
+        }
+        .product-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        .glass {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .cart-item {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .pulse-green {
+            animation: pulseGreen 2s infinite;
+        }
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 0 5px rgba(0,200,83,0.5); }
+            50% { box-shadow: 0 0 20px rgba(0,200,83,0.8); }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; }
+        ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 3px; }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass px-4 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <h1 class="brand-font text-xl md:text-3xl text-leaf tracking-wide">Freshi Barida <span class="text-neon">jaba baze</span></h1>
+            <div class="text-right">
+                <p class="text-xs text-gray-400" id="current-date"></p>
+                <p class="text-sm font-bold text-leaf" id="daily-revenue">KSh 0</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        <!-- Product Grid -->
+        <section id="product-grid">
+            <h2 class="text-lg font-semibold text-gray-300 mb-3">Tap to Add</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <button onclick="addToCart('Jaba', 50)" class="product-btn bg-jaba rounded-2xl p-6 text-center">
+                    <div class="text-3xl mb-2">🌿</div>
+                    <div class="font-bold text-lg">Jaba</div>
+                    <div class="text-sm opacity-80">KSh 50</div>
+                </button>
+                <button onclick="addToCart('Njugu', 10)" class="product-btn bg-accent rounded-2xl p-6 text-center">
+                    <div class="text-3xl mb-2">🥜</div>
+                    <div class="font-bold text-lg">Njugu</div>
+                    <div class="text-sm opacity-80">KSh 10</div>
+                </button>
+                <button onclick="addToCart('Fegi', 10)" class="product-btn bg-deepgreen border-2 border-leaf rounded-2xl p-6 text-center">
+                    <div class="text-3xl mb-2">🫘</div>
+                    <div class="font-bold text-lg">Fegi</div>
+                    <div class="text-sm opacity-80">KSh 10</div>
+                </button>
+                <button onclick="addToCart('Gomba', 5)" class="product-btn bg-deepgreen border-2 border-gray-600 rounded-2xl p-6 text-center">
+                    <div class="text-3xl mb-2">🍄</div>
+                    <div class="font-bold text-lg">Gomba</div>
+                    <div class="text-sm opacity-80">KSh 5</div>
+                </button>
+                <button onclick="addToCart('Steam', 50)" class="product-btn bg-steam rounded-2xl p-6 text-center col-span-2 md:col-span-1">
+                    <div class="text-3xl mb-2">💨</div>
+                    <div class="font-bold text-lg">Steam</div>
+                    <div class="text-sm opacity-80">KSh 50</div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Current Cart -->
+        <section id="cart-section" class="glass rounded-2xl p-4 hidden">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-semibold text-leaf">🛒 Current Cart</h2>
+                <button onclick="clearCart()" class="text-xs bg-red-600/30 text-red-300 px-3 py-1 rounded-full hover:bg-red-600/50">Clear</button>
+            </div>
+            <div id="cart-items" class="space-y-2 max-h-48 overflow-y-auto mb-3"></div>
+            <div class="border-t border-white/10 pt-3 flex items-center justify-between">
+                <div>
+                    <span class="text-gray-400 text-sm">Total:</span>
+                    <span id="cart-total" class="text-xl font-bold text-white ml-2">KSh 0</span>
+                </div>
+                <button onclick="saveTransaction()" class="bg-leaf hover:bg-green-600 text-charcoal font-bold px-6 py-2 rounded-xl transition pulse-green">
+                    💾 Save
+                </button>
+            </div>
+        </section>
+
+        <!-- Analytics Dashboard -->
+        <section class="glass rounded-2xl p-4">
+            <h2 class="text-lg font-semibold text-gray-300 mb-4">📊 Today's Dashboard</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                <div class="bg-charcoal/50 rounded-xl p-3 text-center">
+                    <p class="text-xs text-gray-400">Jaba</p>
+                    <p id="stat-Jaba" class="text-xl font-bold text-jaba">0</p>
+                </div>
+                <div class="bg-charcoal/50 rounded-xl p-3 text-center">
+                    <p class="text-xs text-gray-400">Njugu</p>
+                    <p id="stat-Njugu" class="text-xl font-bold text-blue-300">0</p>
+                </div>
+                <div class="bg-charcoal/50 rounded-xl p-3 text-center">
+                    <p class="text-xs text-gray-400">Fegi</p>
+                    <p id="stat-Fegi" class="text-xl font-bold text-leaf">0</p>
+                </div>
+                <div class="bg-charcoal/50 rounded-xl p-3 text-center">
+                    <p class="text-xs text-gray-400">Gomba</p>
+                    <p id="stat-Gomba" class="text-xl font-bold text-gray-300">0</p>
+                </div>
+                <div class="bg-charcoal/50 rounded-xl p-3 text-center">
+                    <p class="text-xs text-gray-400">Steam</p>
+                    <p id="stat-Steam" class="text-xl font-bold text-steam">0</p>
+                </div>
+            </div>
+            <!-- Chart -->
+            <div class="bg-charcoal/30 rounded-xl p-3 mb-4" style="height: 220px;">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Recent Transactions -->
+        <section class="glass rounded-2xl p-4">
+            <h2 class="text-lg font-semibold text-gray-300 mb-3">🧾 Last 10 Transactions</h2>
+            <div id="transaction-list" class="space-y-2 max-h-64 overflow-y-auto">
+                <p class="text-gray-500 text-sm text-center py-4">No transactions yet today.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 mt-8">
+        <p class="brand-font text-lg text-gray-500">dev. by <span class="text-neon">P.o.Riot🍄</span><span class="text-leaf">(macho4)</span></p>
+    </footer>
+
+    <!-- Quantity Modal -->
+    <div id="qty-modal" class="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center hidden">
+        <div class="glass rounded-2xl p-6 w-80 mx-4">
+            <h3 class="text-lg font-bold mb-1" id="modal-title">Add Product</h3>
+            <p class="text-sm text-gray-400 mb-4" id="modal-subtitle">Enter quantity</p>
+            <input type="number" id="qty-input" min="1" value="1" class="w-full bg-charcoal border border-white/20 rounded-xl px-4 py-3 text-center text-2xl font-bold text-white focus:outline-none focus:border-leaf mb-4">
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="cancelModal()" class="bg-gray-700 hover:bg-gray-600 py-2 rounded-xl font-semibold">Cancel</button>
+                <button onclick="confirmAdd()" class="bg-leaf hover:bg-green-600 text-charcoal py-2 rounded-xl font-bold">Add ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== STATE =====
+        let cart = [];
+        let pendingProduct = null;
+        let pendingPrice = 0;
+        let transactionCounter = parseInt(localStorage.getItem('fb_txCounter') || '1000');
+        let salesChart = null;
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', () => {
+            purgeOldData();
+            updateDate();
+            updateDashboard();
+            renderTransactions();
+            initChart();
+        });
+
+        // ===== DATE =====
+        function updateDate() {
+            const now = new Date();
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-KE', {
+                weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+            });
+        }
+
+        // ===== CART LOGIC =====
+        function addToCart(product, price) {
+            pendingProduct = product;
+            pendingPrice = price;
+            document.getElementById('modal-title').textContent = `Add ${product}`;
+            document.getElementById('modal-subtitle').textContent = `KSh ${price} each`;
+            document.getElementById('qty-input').value = 1;
+            document.getElementById('qty-modal').classList.remove('hidden');
+            document.getElementById('qty-input').focus();
+        }
+
+        function cancelModal() {
+            document.getElementById('qty-modal').classList.add('hidden');
+            pendingProduct = null;
+            pendingPrice = 0;
+        }
+
+        function confirmAdd() {
+            const qty = parseInt(document.getElementById('qty-input').value) || 1;
+            if (qty < 1) return;
+
+            // Check if product already in cart
+            const existing = cart.find(item => item.product === pendingProduct);
+            if (existing) {
+                existing.qty += qty;
+            } else {
+                cart.push({ product: pendingProduct, price: pendingPrice, qty: qty });
+            }
+
+            document.getElementById('qty-modal').classList.add('hidden');
+            renderCart();
+        }
+
+        // Handle Enter key in modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('qty-modal').classList.contains('hidden')) {
+                confirmAdd();
+            }
+            if (e.key === 'Escape' && !document.getElementById('qty-modal').classList.contains('hidden')) {
+                cancelModal();
+            }
+        });
+
+        function renderCart() {
+            const section = document.getElementById('cart-section');
+            const container = document.getElementById('cart-items');
+
+            if (cart.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            container.innerHTML = cart.map((item, i) => `
+                <div class="cart-item flex items-center justify-between bg-charcoal/40 rounded-xl px-3 py-2">
+                    <div>
+                        <span class="font-semibold">${item.product}</span>
+                        <span class="text-gray-400 text-sm ml-2">x${item.qty}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold">KSh ${item.price * item.qty}</span>
+                        <button onclick="removeFromCart(${i})" class="text-red-400 hover:text-red-300 text-lg">×</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('cart-total').textContent = `KSh ${total}`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        // ===== TRANSACTIONS =====
+        function saveTransaction() {
+            if (cart.length === 0) return;
+
+            transactionCounter++;
+            localStorage.setItem('fb_txCounter', transactionCounter.toString());
+
+            const transaction = {
+                id: `#FB-${transactionCounter}`,
+                items: [...cart],
+                total: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleDateString('en-KE')
+            };
+
+            const transactions = getTransactions();
+            transactions.push(transaction);
+            localStorage.setItem('fb_transactions', JSON.stringify(transactions));
+
+            // Reset cart
+            cart = [];
+            renderCart();
+
+            // Update UI
+            updateDashboard();
+            renderTransactions();
+
+            // Show confirmation
+            showToast(`Saved ${transaction.id} — KSh ${transaction.total}`);
+        }
+
+        function getTransactions() {
+            try {
+                return JSON.parse(localStorage.getItem('fb_transactions') || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        function getTodayTransactions() {
+            const today = new Date().toLocaleDateString('en-KE');
+            return getTransactions().filter(tx => tx.date === today);
+        }
+
+        // ===== PURGE OLD DATA (30 days) =====
+        function purgeOldData() {
+            const transactions = getTransactions();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const filtered = transactions.filter(tx => new Date(tx.timestamp) >= thirtyDaysAgo);
+            localStorage.setItem('fb_transactions', JSON.stringify(filtered));
+        }
+
+        // ===== DASHBOARD =====
+        function updateDashboard() {
+            const todayTx = getTodayTransactions();
+
+            // Revenue
+            const revenue = todayTx.reduce((sum, tx) => sum + tx.total, 0);
+            document.getElementById('daily-revenue').textContent = `KSh ${revenue.toLocaleString()}`;
+
+            // Units sold per product
+            const units = { Jaba: 0, Njugu: 0, Fegi: 0, Gomba: 0, Steam: 0 };
+            todayTx.forEach(tx => {
+                tx.items.forEach(item => {
+                    if (units.hasOwnProperty(item.product)) {
+                        units[item.product] += item.qty;
+                    }
+                });
+            });
+
+            Object.keys(units).forEach(product => {
+                const el = document.getElementById(`stat-${product}`);
+                if (el) el.textContent = units[product];
+            });
+
+            // Update chart
+            updateChart(units);
+        }
+
+        // ===== TRANSACTIONS LIST =====
+        function renderTransactions() {
+            const container = document.getElementById('transaction-list');
+            const todayTx = getTodayTransactions().slice(-10).reverse();
+
+            if (todayTx.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No transactions yet today.</p>';
+                return;
+            }
+
+            container.innerHTML = todayTx.map(tx => {
+                const time = new Date(tx.timestamp).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
+                const items = tx.items.map(i => `${i.product}×${i.qty}`).join(', ');
+                return `
+                    <div class="bg-charcoal/40 rounded-xl px-3 py-2 flex items-center justify-between">
+                        <div>
+                            <span class="text-leaf font-mono text-sm font-bold">${tx.id}</span>
+                            <span class="text-gray-400 text-xs ml-2">${time}</span>
+                            <p class="text-gray-300 text-xs mt-0.5">${items}</p>
+                        </div>
+                        <span class="font-bold text-sm">KSh ${tx.total}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== CHART =====
+        function initChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            salesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jaba', 'Njugu', 'Fegi', 'Gomba', 'Steam'],
+                    datasets: [{
+                        label: 'Units Sold Today',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(123, 47, 247, 0.7)',
+                            'rgba(96, 165, 250, 0.7)',
+                            'rgba(0, 200, 83, 0.7)',
+                            'rgba(156, 163, 175, 0.7)',
+                            'rgba(255, 107, 53, 0.7)'
+                        ],
+                        borderColor: [
+                            '#7b2ff7',
+                            '#60a5fa',
+                            '#00c853',
+                            '#9ca3af',
+                            '#ff6b35'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af', stepSize: 1 },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart(units) {
+            if (!salesChart) return;
+            salesChart.data.datasets[0].data = [
+                units.Jaba, units.Njugu, units.Fegi, units.Gomba, units.Steam
+            ];
+            salesChart.update();
+        }
+
+        // ===== TOAST =====
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-leaf text-charcoal font-bold px-6 py-3 rounded-xl shadow-lg z-[200] text-sm';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.5s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
